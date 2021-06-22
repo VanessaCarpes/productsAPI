@@ -22,7 +22,7 @@ import java.util.Iterator;
 public class SetupDataLoader implements ApplicationListener<ContextRefreshedEvent> {
 
     @Value("${setup.data.quantity}")
-    private Integer addQuantity;
+    private int addQuantity;
 
     @Autowired
     private ProductRepository productRepository;
@@ -30,7 +30,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     @Autowired
     private CategoryRepository categoryRepository;
 
-    private static Logger logger = LoggerFactory.getLogger(SetupDataLoader.class);
+    private static final Logger logger = LoggerFactory.getLogger(SetupDataLoader.class);
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
@@ -39,7 +39,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
 
             String resultJson = restTemplate.getForObject("https://gorest.co.in/public-api/products", String.class);
             Iterator<JsonNode> iterator = new ObjectMapper().readValue(resultJson, ObjectNode.class).get("data").iterator();
-            Integer productsAdded = 0;
+            int productsAdded = 0;
 
             while(iterator.hasNext()) {
                 if (productsAdded >= addQuantity) {
@@ -48,7 +48,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
 
                 createProduct(iterator.next());
                 productsAdded ++;
-            };
+            }
 
         } catch (JsonProcessingException ex) {
             logger.error("error parsing json", ex);
@@ -60,9 +60,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             Product product = new ObjectMapper().treeToValue(productNode, Product.class);
 
             if (product.getCategories() != null) {
-                product.getCategories().forEach((category -> {
-                    categoryRepository.save(category);
-                }));
+                product.getCategories().forEach((category -> categoryRepository.save(category)));
             }
 
             productRepository.save(product);
